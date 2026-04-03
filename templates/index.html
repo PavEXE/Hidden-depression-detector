@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Hidden Depression Detection — ByteForce4</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #0f1117;
+      color: #e2e8f0;
+      min-height: 100vh;
+      padding: 20px;
+    }
+    header {
+      text-align: center;
+      padding: 30px 0 20px;
+    }
+    header h1 {
+      font-size: 2rem;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    header p { color: #94a3b8; margin-top: 6px; font-size: 0.95rem; }
+
+    .container { max-width: 820px; margin: 0 auto; }
+
+    .card {
+      background: #1e2130;
+      border-radius: 12px;
+      padding: 24px;
+      margin-bottom: 20px;
+      border: 1px solid #2d3748;
+    }
+    .card h2 { font-size: 1.1rem; color: #a78bfa; margin-bottom: 14px; }
+
+    label { display: block; font-size: 0.85rem; color: #94a3b8; margin-bottom: 6px; }
+
+    select, textarea {
+      width: 100%;
+      background: #0f1117;
+      color: #e2e8f0;
+      border: 1px solid #374151;
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-size: 0.95rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    select:focus, textarea:focus { border-color: #7c3aed; }
+    textarea { resize: vertical; min-height: 110px; }
+
+    .tab-row { display: flex; gap: 10px; margin-bottom: 18px; }
+    .tab {
+      padding: 8px 18px;
+      border-radius: 6px;
+      border: 1px solid #374151;
+      background: transparent;
+      color: #94a3b8;
+      cursor: pointer;
+      font-size: 0.88rem;
+      transition: all 0.2s;
+    }
+    .tab.active { background: #7c3aed; color: #fff; border-color: #7c3aed; }
+
+    button.analyze-btn {
+      margin-top: 14px;
+      width: 100%;
+      padding: 12px;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      cursor: pointer;
+      font-weight: 600;
+      transition: opacity 0.2s;
+    }
+    button.analyze-btn:hover { opacity: 0.9; }
+    button.analyze-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    #result { display: none; }
+
+    .risk-badge {
+      display: inline-block;
+      padding: 6px 18px;
+      border-radius: 20px;
+      font-weight: 700;
+      font-size: 1.1rem;
+      margin-bottom: 12px;
+    }
+    .risk-Low      { background: #064e3b; color: #6ee7b7; }
+    .risk-Moderate { background: #78350f; color: #fcd34d; }
+    .risk-High     { background: #7f1d1d; color: #fca5a5; }
+
+    .score-bar-wrap { margin: 12px 0; }
+    .score-bar-bg {
+      background: #374151;
+      border-radius: 99px;
+      height: 10px;
+      overflow: hidden;
+    }
+    .score-bar-fill {
+      height: 100%;
+      border-radius: 99px;
+      transition: width 0.7s ease;
+      background: linear-gradient(90deg, #667eea, #f43f5e);
+    }
+    .score-label { font-size: 0.82rem; color: #94a3b8; margin-top: 4px; }
+
+    .signals { list-style: none; margin: 10px 0; }
+    .signals li {
+      padding: 6px 10px;
+      background: #2d3748;
+      border-radius: 6px;
+      margin-bottom: 6px;
+      font-size: 0.88rem;
+    }
+
+    .recs { list-style: none; }
+    .recs li {
+      padding: 7px 12px;
+      border-left: 3px solid #7c3aed;
+      margin-bottom: 8px;
+      font-size: 0.88rem;
+      background: #1a1f2e;
+      border-radius: 0 6px 6px 0;
+    }
+
+    .crisis-banner {
+      background: #7f1d1d;
+      border: 1px solid #f43f5e;
+      border-radius: 8px;
+      padding: 12px 16px;
+      margin-bottom: 14px;
+      font-weight: 600;
+      color: #fca5a5;
+    }
+
+    .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
+    .stat-box {
+      background: #0f1117;
+      border-radius: 8px;
+      padding: 10px 14px;
+      text-align: center;
+    }
+    .stat-box .num { font-size: 1.6rem; font-weight: 700; color: #a78bfa; }
+    .stat-box .lbl { font-size: 0.75rem; color: #64748b; margin-top: 2px; }
+
+    #loading {
+      text-align: center;
+      padding: 20px;
+      color: #94a3b8;
+      display: none;
+    }
+    .spinner {
+      display: inline-block;
+      width: 28px; height: 28px;
+      border: 3px solid #374151;
+      border-top-color: #7c3aed;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin-bottom: 8px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    footer {
+      text-align: center;
+      padding: 30px 0 10px;
+      color: #374151;
+      font-size: 0.8rem;
+    }
+  </style>
+</head>
+<body>
+<header>
+  <h1>🧠 Hidden Depression Detection</h1>
+  <p>Social Media Behavior Analysis · ByteForce4 · Resonate 2026</p>
+</header>
+
+<div class="container">
+
+  <!-- Input Card -->
+  <div class="card">
+    <h2>Analyze Social Media Post</h2>
+
+    <div class="tab-row">
+      <button class="tab active" onclick="setMode('single', this)">Single Post</button>
+      <button class="tab" onclick="setMode('batch', this)">Batch Analysis</button>
+    </div>
+
+    <div id="single-input">
+      <label>Paste the social media post below</label>
+      <textarea id="text-input" placeholder="e.g. I've been feeling so empty lately. Nothing brings me joy anymore. Every day feels pointless..."></textarea>
+    </div>
+
+    <div id="batch-input" style="display:none">
+      <label>Paste multiple posts (one per line)</label>
+      <textarea id="batch-text-input" style="min-height:160px"
+        placeholder="Post 1&#10;Post 2&#10;Post 3"></textarea>
+    </div>
+
+    <div style="margin-top:14px">
+      <label>Platform</label>
+      <select id="platform">
+        <option value="twitter">Twitter / X</option>
+        <option value="reddit">Reddit</option>
+        <option value="instagram">Instagram</option>
+        <option value="facebook">Facebook</option>
+      </select>
+    </div>
+
+    <button class="analyze-btn" id="analyze-btn" onclick="runAnalysis()">
+      Analyze
+    </button>
+  </div>
+
+  <!-- Loading -->
+  <div id="loading">
+    <div class="spinner"></div>
+    <div>Analyzing…</div>
+  </div>
+
+  <!-- Result -->
+  <div class="card" id="result">
+    <h2>Analysis Result</h2>
+    <div id="result-body"></div>
+  </div>
+
+</div>
+
+<footer>⚠️ This tool is for research purposes only. Always consult a qualified mental health professional.</footer>
+
+<script>
+  let mode = 'single';
+
+  function setMode(m, btn) {
+    mode = m;
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('single-input').style.display = m === 'single' ? '' : 'none';
+    document.getElementById('batch-input').style.display  = m === 'batch'  ? '' : 'none';
+    document.getElementById('result').style.display = 'none';
+  }
+
+  async function runAnalysis() {
+    const btn = document.getElementById('analyze-btn');
+    const platform = document.getElementById('platform').value;
+
+    btn.disabled = true;
+    document.getElementById('loading').style.display = 'block';
+    document.getElementById('result').style.display  = 'none';
+
+    try {
+      if (mode === 'single') {
+        const text = document.getElementById('text-input').value;
+        const res  = await fetch('/analyze', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text, platform })
+        });
+        const data = await res.json();
+        renderSingle(data);
+      } else {
+        const raw   = document.getElementById('batch-text-input').value;
+        const posts = raw.split('\n').map(p => p.trim()).filter(Boolean);
+        const res   = await fetch('/batch', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ posts, platform })
+        });
+        const data = await res.json();
+        renderBatch(data);
+      }
+    } catch (e) {
+      document.getElementById('result-body').innerHTML = '<p style="color:#f43f5e">Error: ' + e.message + '</p>';
+    }
+
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('result').style.display = 'block';
+    btn.disabled = false;
+  }
+
+  function renderSingle(d) {
+    const pct = Math.round(d.risk_score * 100);
+    let html = '';
+
+    if (d.crisis_detected) {
+      html += `<div class="crisis-banner">🚨 Crisis language detected — immediate support resources listed below.</div>`;
+    }
+
+    html += `<span class="risk-badge risk-${d.risk_level}">${d.risk_level} Risk</span>`;
+    html += `
+      <div class="score-bar-wrap">
+        <div class="score-bar-bg"><div class="score-bar-fill" style="width:${pct}%"></div></div>
+        <div class="score-label">Risk Score: ${pct}%</div>
+      </div>`;
+
+    if (d.detected_signals && d.detected_signals.length) {
+      html += `<p style="color:#94a3b8;font-size:.85rem;margin:12px 0 6px">Detected Signals</p>
+               <ul class="signals">${d.detected_signals.map(s => `<li>${s}</li>`).join('')}</ul>`;
+    }
+
+    html += `<p style="color:#94a3b8;font-size:.85rem;margin:14px 0 6px">Recommendations</p>
+             <ul class="recs">${d.recommendations.map(r => `<li>${r}</li>`).join('')}</ul>`;
+
+    document.getElementById('result-body').innerHTML = html;
+  }
+
+  function renderBatch(d) {
+    const agg = d.aggregate;
+    const pct = Math.round(agg.avg_risk_score * 100);
+    let html = `
+      <span class="risk-badge risk-${agg.overall_risk}">${agg.overall_risk} Overall Risk</span>
+      <div class="score-bar-wrap">
+        <div class="score-bar-bg"><div class="score-bar-fill" style="width:${pct}%"></div></div>
+        <div class="score-label">Average Risk Score: ${pct}%</div>
+      </div>
+      <div class="grid2">
+        <div class="stat-box"><div class="num">${agg.total_posts}</div><div class="lbl">Posts Analyzed</div></div>
+        <div class="stat-box"><div class="num" style="color:#f43f5e">${agg.high_risk_posts}</div><div class="lbl">High Risk Posts</div></div>
+      </div>
+      <p style="color:#94a3b8;font-size:.85rem;margin:16px 0 8px">Individual Post Results</p>`;
+
+    html += d.individual_results.map((r, i) => `
+      <div style="padding:10px;background:#0f1117;border-radius:8px;margin-bottom:8px">
+        <span class="risk-badge risk-${r.risk_level}" style="font-size:.78rem;padding:3px 10px">${r.risk_level}</span>
+        <span style="font-size:.82rem;color:#94a3b8;margin-left:8px">${r.text}</span>
+      </div>`).join('');
+
+    document.getElementById('result-body').innerHTML = html;
+  }
+</script>
+</body>
+</html>
