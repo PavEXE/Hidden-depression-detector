@@ -51,7 +51,7 @@ python app.py
 # 4. Open in browser
 # http://localhost:5000
 ```
-
+Or open templates -> OPEN-THIS-FOR-DEMO.html
 ## Project Structure
 
 ```
