@@ -18,7 +18,7 @@ A web-based AI-powered tool that analyzes the text of social media posts and det
 
 ## Demo
 
-Live Demo: *(add your deployed link here after deployment)*
+Live Demo: https://youtu.be/e0bPOQgZVvA
 
 ## Features
 
