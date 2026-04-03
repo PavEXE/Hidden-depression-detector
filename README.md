@@ -1,6 +1,6 @@
 # 🧠 Hidden Depression Detection Through Social Media Behavior
 
-> **Resonate 2026 Hackathon · ByteForce4 · Track 1**
+> **Resonate 2026 Hackathon · MindSpace · Track 1**
 
 ## Problem Statement
 
